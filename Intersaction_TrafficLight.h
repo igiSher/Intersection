@@ -4,9 +4,9 @@
 #include <Arduino.h>
 
 enum eGlobalTlState {
-  GLOBAL_TF_STATE_UNDEFINED,    // Blinking yellow
-  GLOBAL_TF_STATE_GREEN,
-  GLOBAL_TF_STATE_RED
+  GLOBAL_TL_STATE_UNDEFINED,    // Blinking yellow
+  GLOBAL_TL_STATE_GREEN,
+  GLOBAL_TL_STATE_RED
 };
 enum eTrafficLightPosition {
   TL_POSITION_UNDEFINED
@@ -47,7 +47,6 @@ class TrafficLight {
       TL_STATE_MAX = 0xFF
     };
 
-    setTlInternalState(eTrafficLightInternalSM state);
     eGlobalTlState m_tlFinalstate;              // Final Traffic light state
     eTrafficLightInternalSM m_tlInternalSM;     // Internal state machine state
 
