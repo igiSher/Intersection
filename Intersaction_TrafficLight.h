@@ -12,29 +12,37 @@ enum eTrafficLightPosition {
   TL_POSITION_UNDEFINED
 };
 
+#define BLINK_PERIOD_DEFAULT_MILI_SEC           (500)
+#define TRANSITION_HOLD_TIME_DEFAULT_MILI_SEC   (5000)
 
 class TrafficLight {
   public:
     TrafficLight();
-    TrafficLight(uint8_t r_pin, uint8_t g_pin, uint8_t y_pin);
-    TrafficLight(uint8_t r_pin, uint8_t g_pin, uint8_t y_pin,
-                 eTrafficLightPosition pos, String tlName);
+    TrafficLight(uint8_t r_pin, uint8_t y_pin, uint8_t g_pin);
+    TrafficLight(uint8_t r_pin,
+                 uint8_t y_pin,
+                 uint8_t g_pin,
+                 eTrafficLightPosition pos,
+                 String tlName);
 
     ~TrafficLight();
 
     // Setters
-    setTlGlobalState(eGlobalTlState state);
-    assignColorsToGpios(uint8_t r_pin, uint8_t g_pin, uint8_t y_pin);
-    setTlPosition(eTrafficLightPosition pos);
-    setNameOfTl(String name);
+    void setTlGlobalState(eGlobalTlState state);
+    void assignColorsToGpios(uint8_t r_pin, uint8_t y_pin, uint8_t g_pin);
+    void setTlPosition(eTrafficLightPosition pos);
+    void setNameOfTl(String name);
+    void setBlinkPeriod(unsigned long periodInMiliSec);
+    void setTransitionHoldTime(unsigned long transitionTimeInMiliSec);
 
     ////////
     // Main loop, will be called by outer loop to handle TrafficLight
-    // internal buisness logic (i.e tstaeMachine housekeeping)
-    trafficLightMainLoop();
+    // internal buisness logic (i.e state Machine housekeeping)
+    void trafficLightMainLoop();
 
   private:
-    enum eTrafficLightInternalSM {
+    enum eTrafficLightInternalFSM
+    {
       TL_STATE_UNDEFINED,         // Blinking yellow
       TL_STATE_CONST_GREEN,       // Constant green
       TL_STATE_CONST_RED,
@@ -47,8 +55,27 @@ class TrafficLight {
       TL_STATE_MAX = 0xFF
     };
 
-    eGlobalTlState m_tlFinalstate;              // Final Traffic light state
-    eTrafficLightInternalSM m_tlInternalSM;     // Internal state machine state
+    enum eLightsState
+    {
+      TL_LIGHT_OFF    = 0,
+      TL_LIGHT_ON     = 1,
+      TL_LIGHT_BLINK  = 2
+    };
+
+    void tlFsm();
+    void tlCommonInit();
+
+    void tlFsmConstGreen();
+    void tlFsmConstRed();
+    void tlFsmConstYellow();
+    void tlFsmConstRedAndYellow();
+    void tlFsmBlinkingGreen();
+    void tlFsmBlinkingYellow();
+
+    void tlSetLightsRYG(eLightsState r, eLightsState y, eLightsState g);
+
+    eGlobalTlState m_tlFinalstate;                     // Traffic light final state
+    eTrafficLightInternalFSM m_tlInternalFsmNextState; // Internal state machine state
 
     eTrafficLightPosition m_position;
     String m_trafficLightName;
@@ -56,6 +83,10 @@ class TrafficLight {
     uint8_t m_redLight;
     uint8_t m_greenLight;
     uint8_t m_yellowLight;
+    unsigned long m_blinkPeriodDelay;
+    unsigned long m_transitionHoldTime;
+    uint8_t m_holdTimeCounter;
+    unsigned long m_previousMillis; //variable for measuring time
 };
 
 #endif
