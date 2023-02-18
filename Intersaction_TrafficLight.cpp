@@ -47,28 +47,37 @@ void TrafficLight::trafficLightMainLoop()
 
   if (tmpVal >= BLINK_PERIOD_DEFAULT_MILI_SEC) {
     m_previousMillis = currentMillis;
+    // String s = "GL_TF_FSM_CHECKPOINT";
 
     switch(m_tlFinalstate)
     {
       case GLOBAL_TL_STATE_GREEN:
-        if(m_tlInternalFsmNextState == TL_STATE_CONST_RED)
+        // Serial.println(s + "=1");
+        if(m_tlInternalFsmNextState == TL_STATE_CONST_RED && !m_inTransitionFlag)
         {
+          // Serial.println(s + "=2");
           // To avoid changing internal state during transition, set 
           // change to next state once traffic light reached CONST RED
+          m_inTransitionFlag = true;
           m_tlInternalFsmNextState = TL_STATE_CONST_RED_AND_YELLOW;
         }
         break;
 
       case GLOBAL_TL_STATE_RED:
+        // Serial.println(s + "=3");
         // If internalState is Undefined, switch immediately to RED
         if (m_tlInternalFsmNextState == TL_STATE_UNDEFINED)
         {
+          // Serial.println(s + "=4");
+          m_inTransitionFlag = true;
           m_tlInternalFsmNextState = TL_STATE_CONST_RED;
         }
-        else if(m_tlInternalFsmNextState == TL_STATE_CONST_GREEN)
+        else if(m_tlInternalFsmNextState == TL_STATE_CONST_GREEN && !m_inTransitionFlag)
         {
+          // Serial.println(s + "=5");
           // To avoid changing internal state during transition,
           // change to the next state once traffic light reached CONST GREEN
+          m_inTransitionFlag = true;
           m_tlInternalFsmNextState = TL_STATE_BLINKING_GREEN;
         }
         break;
@@ -77,6 +86,8 @@ void TrafficLight::trafficLightMainLoop()
       default:
         // In both these cases immediately switch
         // the internal FSM to TL_STATE_UNDEFINED
+        // Serial.println(s + "=6");
+        m_inTransitionFlag = true;
         m_tlInternalFsmNextState = TL_STATE_UNDEFINED;
         break;
     }
@@ -129,10 +140,12 @@ void TrafficLight::tlFsm()
   {
     case TL_STATE_CONST_GREEN:
       tlFsmConstGreen();
+      m_inTransitionFlag = false;
       break;
 
     case TL_STATE_CONST_RED:
       tlFsmConstRed();
+      m_inTransitionFlag = false;
       break;
 
     case TL_STATE_CONST_YELLOW:
@@ -153,6 +166,7 @@ void TrafficLight::tlFsm()
     default:
       // Undefined = Blinking yellow
       tlFsmBlinkingYellow();
+      m_inTransitionFlag = false;
       break;
   }
 }
@@ -251,5 +265,6 @@ void TrafficLight::tlCommonInit()
   m_transitionHoldTime = TRANSITION_HOLD_TIME_DEFAULT_MILI_SEC;
   m_holdTimeCounter = 0;
   m_previousMillis = 0;
+  m_inTransitionFlag = false;
 }
 

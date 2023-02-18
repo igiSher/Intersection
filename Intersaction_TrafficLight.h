@@ -86,6 +86,7 @@ class TrafficLight {
     unsigned long m_blinkPeriodDelay;
     unsigned long m_transitionHoldTime;
     uint8_t m_holdTimeCounter;
+    bool m_inTransitionFlag;
     unsigned long m_previousMillis; //variable for measuring time
 };
 
